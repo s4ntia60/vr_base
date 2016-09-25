@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html>
+  <head>
+		<script src="https://aframe.io/releases/0.3.0/aframe.min.js"></script>
+		<script src="https://rawgit.com/ngokevin/aframe-layout-component/master/dist/aframe-layout-component.min.js"></script>
+		<script src="https://rawgit.com/ngokevin/aframe-event-set-component/master/dist/aframe-event-set-component.min.js"></script>
+
+  </head>
+	<body style="background-color: white">     
+		<div id="options"  style="width: 200px; height:150px; position: fixed; top:200px; left: 20px; color:gray" >
+			<h1> Loading...</h1>			
+		</div>
+		<script>
+		
+		var count = 0;
+
+		AFRAME.registerComponent('print-stats', {
+		  schema: {default: '' },
+		  
+		  tick: function () {
+
+		  	
+		  	var targetPos = new THREE.Vector3(0, 0, 0);  
+		  	var directionVector = new THREE.Vector3(0, 0, -1);    		  	
+		  	var rotationEuler = new THREE.Euler(0, 0, 0, 'YXZ');
+		  	var rotation = this.el.getComputedAttribute("rotation");
+
+		  	// Transform direction relative to heading
+		  	// rotationEuler.set(THREE.Math.degToRad(rotation.x), THREE.Math.degToRad(rotation.y), 0);
+      		// width pitch = 0 we keep the perfect circle spacing
+      		rotationEuler.set(THREE.Math.degToRad(0), THREE.Math.degToRad(rotation.y), 0);
+      		
+      		directionVector.applyEuler(rotationEuler);	  	
+		  	
+		  	directionVector = directionVector.normalize().multiplyScalar(4);
+		  	
+
+
+		  	targetPos.x = (directionVector.x ) + this.el.getComputedAttribute("position").x;
+			targetPos.y = 1; 
+			targetPos.z = (directionVector.z) + this.el.getComputedAttribute("position").z;			
+		  	
+		  	var images =  document.querySelectorAll('a-sphere');
+			var i;
+			for(i = 0; i < images.length; i++ )
+			{
+				var oldPos = images[i].getComputedAttribute('position');
+				images[i].setAttribute('position', {x: targetPos.x, y: targetPos.y, z: targetPos.z});
+				// images[i].emit("bring-up");
+				// Create animation.
+			    images[i].setAttribute('animation', {
+			      property: 'position',
+			      startEvents: 'bring-up',
+			      dir: 'forward',
+			      dur: 3000,
+			      from: oldPos.x + " " + oldPos.y +" "+ oldPos.z,
+			      to:  targetPos.x +" "+ targetPos.y +" "+ targetPos.z
+			    });
+			}
+			
+			/*setTimeout(function()
+			{ 
+				// alert("Triggering");
+				var images =  document.querySelectorAll('a-sphere');
+				var i;
+				for(i = 0; i < images.length; i++ )
+				{
+					images[i].emit("bring-up");
+				}
+				
+			}, 3000);*/
+		  
+		  }
+		});
+		
+		AFRAME.registerComponent('circle-layout', {
+		  schema: {
+		  	degrees: {default: 45.0},
+		  	radius: {default: 5},
+		  },
+		  
+		  init: function () {
+
+		  	// alert(this.degrees + this.radius);
+		  	var el = this.el;
+			
+		  	var angle = 45 * count   * (Math.PI/180.0);
+		  	var x1 = Math.cos(angle) * 5;
+			var z1 = Math.sin(angle) * 5;
+			var y1 = 1;
+			//alert(el.getComputedAttribute("position").x+" " + el.getComputedAttribute("position").y+" " + el.getComputedAttribute("position").z );
+			el.setAttribute("position", x1.toString() + " " + y1.toString() + " "+ z1.toString());	  	  
+			// alert(x1.toString() + " " + y1.toString() + " "+ z1.toString());
+			count++;
+
+		  }
+		});
+
+		AFRAME.registerComponent('custom-button', {
+			schema: {default:''},
+			init() {
+
+
+		  		this.el.addState("selected");		  		
+
+		  		this.el.addEventListener('stateadded', function (evt){
+	  				var el = this.el;
+	  				console.log(evt.detail.state);
+		  			if(evt.detail.state === 'selected')
+	  				{
+	  					//el.emit("fade-in");
+	  					//document.querySelectorAll('a-image').emit("fade-in");
+	  				}
+		  		});
+
+		  		this.el.addEventListener('stateremoved', function (evt){
+	  				console.log(evt.detail.state);
+	  				var el = this.el;
+
+		  			if(evt.detail.state === 'selected')
+	  				{
+	  					//el.emit("fade-out");
+	  				}
+
+		  		});
+
+				this.el.addEventListener('click', () => {
+					
+					var el = this.el;					
+
+					el.parentNode.addState('selected');					
+
+					var images =  document.querySelectorAll('a-image');
+					//var containers =  document.querySelectorAll('a-image');
+					var i;
+					for(i = 0; i < images.length; i++ )
+					{
+						if(images[i] !==  el.parentNode)
+						{	
+							images[i].emit("fade-out");
+							// images[i].setAttribute('visible', false);
+						}						
+					}
+
+					// console.log(el.parentNode.getComputedAttribute("material.opacity"));
+
+					console.log(el.is("selected"));
+					
+					var previous = el.is("selected");
+
+					var buttons = document.querySelectorAll('a-box');					
+					for(i = 0; i < buttons.length;  i++)
+					{
+						if(buttons[i] !== el)
+						{
+						 	buttons[i].emit("fade-out");
+						 	el.removeState('selected');
+						 	el.parentNode.removeState('selected');
+						}
+					}
+
+
+					if(!previous)
+					{
+						el.parentNode.emit("fade-in");
+						el.addState('selected');
+						el.parentNode.addState('selected');
+						// el.parentNode.emit("scale-up");						
+					
+					}
+
+					var x = el.parentNode.getComputedAttribute("position").x;
+					var y = el.parentNode.getComputedAttribute("position").y;
+					var z = el.parentNode.getComputedAttribute("position").z;
+
+					//var pos = new THREE.Vector3(x, y ,z);
+
+
+
+					var camera = document.getElementById("camera1");
+					//alert(camera.getComputedAttribute("position").x);
+					//alert(x +  " , " + y + ", " + z);
+
+					var camera = document.getElementById("camera1");
+					var pitch = camera.getComputedAttribute("rotation").y * (Math.PI/180.0);
+					var yaw = camera.getComputedAttribute("rotation").x * (Math.PI/180.0);
+
+
+					setTimeout(function()
+						{ 
+							var images =  document.querySelectorAll('a-image');
+							//var containers =  document.querySelectorAll('a-image');
+							var i;
+							for(i = 0; i < images.length; i++ )
+							{
+								if(images[i] !==  el.parentNode)
+								{	
+									// images[i].emit("fade-out");
+									images[i].setAttribute('visible', false);
+								}						
+							}
+
+						}, 1200);
+
+						        
+		 	});
+		}
+		});
+
+		</script>
+
+
+
+		
+
+		<a-scene inspector="url: https://aframe.io/aframe-inspector/build/aframe-inspector.js">
+			<a-assets >
+				<img id="pano1" src="assets/pano1.jpg" >				
+				<img id="logo1" src="assets/La Terrassa_Logo_W2.png" >
+				<img id="hexTex1" src="assets/models/maps/hexTex1.png" >
+				<img id="hexTex2" src="assets/models/maps/hexTex2.png" >
+				<img id="checker" src="assets/models/maps/checker.png" >
+				
+				<!-- <a-asset-item id="env-obj" src="assets/models/env.obj"></a-asset-item>
+    			<a-asset-item id="env-mtl" src="assets/models/env.mtl"></a-asset-item> -->
+
+    			<!-- <a-asset-item id="floor-obj" src="assets/models/floor.obj"></a-asset-item>-->
+
+    			<a-asset-item id="hex-obj" src="assets/models/hex.obj"></a-asset-item>
+    			<a-asset-item id="hex-dae" src="assets/models/hexCollada.DAE"></a-asset-item>
+				<a-mixin id="red" material="color: red" ></a-mixin>
+				<a-mixin id="blue" material="color: blue" ></a-mixin>
+
+
+				
+			
+				
+			</a-assets>
+			
+			<!-- CAMERA -->
+			<a-camera print-stats id="camera1">
+			    <a-cursor id="cursor">
+			      <a-animation begin="click" easing="ease-in" attribute="scale"
+			                   fill="backwards" from="0.1 0.1 0.1" to="1 1 1" dur="150"></a-animation>
+			      <a-animation begin="fusing" easing="ease-in" attribute="scale"
+			                   from="1 1 1" to="0.1 0.1 0.1" dur="1500"></a-animation>
+			    </a-cursor>
+			  </a-camera>
+
+			<!-- Sphere only for creating the fade-in effect -->	
+			<a-entity geometry="primitive: sphere; radius: 0.2" id="bait" position="0 1 0"></a-entity>				
+		
+		
+
+			<!-- SKY -->
+			<!--<a-sky src="#pano1">  
+				<!-- <a-animation begin="0" easing="linear"  fill="backwards" direction="alternate" repeat="indefinte" direction="normal" attribute="rotation" from="0 0 0" to="0 360 0" dur="320000">-->
+			<!-- </a-sky>-->
+			
+			<!--<a-obj-model position="0 -5 0" src="#env-obj" mtl="#env-mtl" material="" obj-model="" rotation="" scale="" visible=""></a-obj-model>-->
+
+
+			
+			<a-plane src="#checker" position="0 0 0" width="10" height="10" rotation="-90 0 0"> </a-plane>
+
+			
+			<a-sphere radius=".2" circle-layout="" id="imageId" material="shader:flat;" position="10 0 0" src="#hexTex1" scale="2.5 2 2.5">
+				
+				<!-- <a-animation begin="bring-up" easing="ease-out-cubic" fill="forward" direction="normal"  attribute="position" from="1" to="0.5" dur="3000"> 
+				</a-animation>-->
+
+				<a-box custom-button mixin="blue" depth="0.01" height="0.2" width="0.2" position="0 -0.25 0" >					
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="1" to="0.5" dur="3000"> </a-animation>
+						
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+					</a-box>
+			</a-sphere >
+			
+	
+			
+
+			<a-entity position="0 1 0" rotation="0 36 0" layout="type: circle; radius: 2.5" class="circle_container" >
+				<a-animation begin="0" easing="ease-out-cubic"  fill="both" direction="normal"  attribute="position" from="0 20 0" to="0 0.3 0" dur="2000"> </a-animation>
+				<a-animation begin="100" easing="ease-out-cubic"  fill="both" direction="normal"  attribute="rotation" from="0 -360 0" to="0 36 0" dur="3000"> </a-animation>
+
+
+				<a-animation begin="fade-out" easing="ease-out-cubic"  fill="both" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+
+
+				<a-image material="shader:flat;" src="#hexTex1" scale="2.5 2 2.5" look-at="#bait" >
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity"  to="0" dur="3000"> </a-animation>
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" to="1" dur="3000"> </a-animation>
+						<a-animation begin="scale-up" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="scale" to="4 3 4" dur="3000"> </a-animation>
+
+
+					<a-box custom-button mixin="blue" depth="0.01" height="0.2" width="0.2" position="0 -0.25 0" >					
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="1" to="0.5" dur="3000"> </a-animation>
+						
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+					</a-box>
+
+					<a-box go-back-button  mixin="red" depth="0.01" height="0.2" width="0.2" position="-0.5 -0.25 0" >					
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="1" to="0.5" dur="3000"> </a-animation>
+						
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+					</a-box>
+
+				</a-image>
+
+				
+			<a-image material="shader:flat;" src="#hexTex1" scale="2.5 2 2.5" look-at="#bait" >
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity"  to="0" dur="3000"> </a-animation>
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" to="1" dur="3000"> </a-animation>
+						<a-animation begin="scale-up" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="scale" to="4 3 4" dur="3000"> </a-animation>
+
+
+					<a-box custom-button mixin="blue" depth="0.01" height="0.2" width="0.2" position="0 -0.25 0" >					
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="1" to="0.5" dur="3000"> </a-animation>
+						
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+					</a-box>
+
+					<a-box go-back-button  mixin="red" depth="0.01" height="0.2" width="0.2" position="-0.5 -0.25 0" >					
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="1" to="0.5" dur="3000"> </a-animation>
+						
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+					</a-box>
+
+				</a-image>
+				<a-image material="shader:flat;" src="#hexTex1" scale="2.5 2 2.5" look-at="#bait" >
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity"  to="0" dur="3000"> </a-animation>
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" to="1" dur="3000"> </a-animation>
+						<a-animation begin="scale-up" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="scale" to="4 3 4" dur="3000"> </a-animation>
+
+
+					<a-box custom-button mixin="blue" depth="0.01" height="0.2" width="0.2" position="0 -0.25 0" >					
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="1" to="0.5" dur="3000"> </a-animation>
+						
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+					</a-box>
+
+					<a-box go-back-button  mixin="red" depth="0.01" height="0.2" width="0.2" position="-0.5 -0.25 0" >					
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="1" to="0.5" dur="3000"> </a-animation>
+						
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+					</a-box>
+
+				</a-image>
+				<a-image material="shader:flat;" src="#hexTex1" scale="2.5 2 2.5" look-at="#bait" >
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity"  to="0" dur="3000"> </a-animation>
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" to="1" dur="3000"> </a-animation>
+						<a-animation begin="scale-up" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="scale" to="4 3 4" dur="3000"> </a-animation>
+
+
+					<a-box custom-button mixin="blue" depth="0.01" height="0.2" width="0.2" position="0 -0.25 0" >					
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="1" to="0.5" dur="3000"> </a-animation>
+						
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+					</a-box>
+
+					<a-box go-back-button  mixin="red" depth="0.01" height="0.2" width="0.2" position="-0.5 -0.25 0" >					
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="1" to="0.5" dur="3000"> </a-animation>
+						
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+					</a-box>
+
+				</a-image>
+				<a-image material="shader:flat;" src="#hexTex1" scale="2.5 2 2.5" look-at="#bait" >
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity"  to="0" dur="3000"> </a-animation>
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" to="1" dur="3000"> </a-animation>
+						<a-animation begin="scale-up" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="scale" to="4 3 4" dur="3000"> </a-animation>
+
+
+					<a-box custom-button mixin="blue" depth="0.01" height="0.2" width="0.2" position="0 -0.25 0" >					
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="1" to="0.5" dur="3000"> </a-animation>
+						
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+					</a-box>
+
+					<a-box go-back-button  mixin="red" depth="0.01" height="0.2" width="0.2" position="-0.5 -0.25 0" >					
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="1" to="0.5" dur="3000"> </a-animation>
+						
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+					</a-box>
+
+				</a-image>
+
+
+				
+
+			</a-entity>
+			<a-entity position="0 2.5 0" rotation="0 0 0" layout="type: circle; radius: 2" class="circle_container">
+				<a-animation begin="230" easing="ease-out-cubic"  fill="both" direction="normal"  attribute="position" from="0 20 0" to="0 0.3 0" dur="2000"> </a-animation>
+				<a-animation begin="230" easing="ease-out-cubic"  fill="both" direction="normal"  attribute="rotation" from="0 -360 0" to="0 0 0" dur="3000"> </a-animation>				
+				<a-image material="shader:flat;" src="#hexTex1" scale="2.5 2 2.5" look-at="#bait" >
+							<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity"  to="0" dur="3000"> </a-animation>
+							<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" to="1" dur="3000"> </a-animation>
+							<a-animation begin="scale-up" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="scale" to="4 3 4" dur="3000"> </a-animation>
+
+
+						<a-box custom-button mixin="blue" depth="0.01" height="0.2" width="0.2" position="0 -0.25 0" >					
+							<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="1" to="0.5" dur="3000"> </a-animation>
+							
+							<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+
+						</a-box>
+					</a-image>
+					<a-image material="shader:flat;" src="#hexTex1" scale="2.5 2 2.5" look-at="#bait" >
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity"  to="0" dur="3000"> </a-animation>
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" to="1" dur="3000"> </a-animation>
+						<a-animation begin="scale-up" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="scale" to="4 3 4" dur="3000"> </a-animation>
+
+
+					<a-box custom-button mixin="blue" depth="0.01" height="0.2" width="0.2" position="0 -0.25 0" >					
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="1" to="0.5" dur="3000"> </a-animation>
+						
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+					</a-box>
+
+					<a-box go-back-button  mixin="red" depth="0.01" height="0.2" width="0.2" position="-0.5 -0.25 0" >					
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="1" to="0.5" dur="3000"> </a-animation>
+						
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+					</a-box>
+
+				</a-image>
+
+<a-image material="shader:flat;" src="#hexTex1" scale="2.5 2 2.5" look-at="#bait" >
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity"  to="0" dur="3000"> </a-animation>
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" to="1" dur="3000"> </a-animation>
+						<a-animation begin="scale-up" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="scale" to="4 3 4" dur="3000"> </a-animation>
+
+
+					<a-box custom-button mixin="blue" depth="0.01" height="0.2" width="0.2" position="0 -0.25 0" >					
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="1" to="0.5" dur="3000"> </a-animation>
+						
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+					</a-box>
+
+					<a-box go-back-button  mixin="red" depth="0.01" height="0.2" width="0.2" position="-0.5 -0.25 0" >					
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="1" to="0.5" dur="3000"> </a-animation>
+						
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+					</a-box>
+
+				</a-image>
+
+<a-image material="shader:flat;" src="#hexTex1" scale="2.5 2 2.5" look-at="#bait" >
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity"  to="0" dur="3000"> </a-animation>
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" to="1" dur="3000"> </a-animation>
+						<a-animation begin="scale-up" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="scale" to="4 3 4" dur="3000"> </a-animation>
+
+
+					<a-box custom-button mixin="blue" depth="0.01" height="0.2" width="0.2" position="0 -0.25 0" >					
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="1" to="0.5" dur="3000"> </a-animation>
+						
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+					</a-box>
+
+					<a-box go-back-button  mixin="red" depth="0.01" height="0.2" width="0.2" position="-0.5 -0.25 0" >					
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="1" to="0.5" dur="3000"> </a-animation>
+						
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+					</a-box>
+
+				</a-image>
+				<a-image material="shader:flat;" src="#hexTex1" scale="2.5 2 2.5" look-at="#bait" >
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity"  to="0" dur="3000"> </a-animation>
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" to="1" dur="3000"> </a-animation>
+						<a-animation begin="scale-up" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="scale" to="4 3 4" dur="3000"> </a-animation>
+
+
+					<a-box custom-button mixin="blue" depth="0.01" height="0.2" width="0.2" position="0 -0.25 0" >					
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="1" to="0.5" dur="3000"> </a-animation>
+						
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+					</a-box>
+
+					<a-box go-back-button  mixin="red" depth="0.01" height="0.2" width="0.2" position="-0.5 -0.25 0" >					
+						<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="1" to="0.5" dur="3000"> </a-animation>
+						
+						<a-animation begin="fade-in" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+					</a-box>
+
+				</a-image>
+
+
+				
+
+
+			</a-entity>
+
+		
+			
+			<!--<a-entity collada-model="#hex-obj" scale="50 50 50"  postion="0 0 0" material="src:#hexTex1;"></a-entity>-->
+			
+			<!--<a-image material="shader:flat;" src="#hexTex1" scale="5 5 5" look-at="#camera1" position="0 1 -4" > </a-image>-->
+
+		</a-scene>		
+
+		 <!-- Add the inspector build below the scene markup. -->
+   		 <!-- <script src="js/aframe-inspector.js"></script>-->
+	</body>	
+</html>

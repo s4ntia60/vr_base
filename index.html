@@ -175,8 +175,9 @@
 					var currentOpacity = AFRAME.utils.entity.getComponentProperty(el.parentNode, 'material.opacity');
 					
 					// alert(currentOpacity + 2);
-
-					var images =  document.querySelectorAll('a-image');
+					
+					//var images =  document.querySelectorAll('a-image');
+					var images =  document.querySelectorAll('.ui-hexagon');
 					//var containers =  document.querySelectorAll('a-image');
 					var i;
 					for(i = 0; i < images.length; i++ )
@@ -307,6 +308,11 @@
 				<img id="hexTex1" src="assets/models/maps/hexTex1.png" >
 				<img id="hexTex2" src="assets/models/maps/hexTex2.png" >
 				<img id="checker" src="assets/models/maps/checker.png" >
+
+				<img id="textImg" src="assets/textImg.png" >
+				<img id="gallery1" src="assets/gallery1.jpg" >
+				<img id="gallery2" src="assets/gallery2.jpg" >
+				<img id="gallery3" src="assets/gallery3.jpg" >
 				
 				<!-- <a-asset-item id="env-obj" src="assets/models/env.obj"></a-asset-item>
     			<a-asset-item id="env-mtl" src="assets/models/env.mtl"></a-asset-item> -->
@@ -358,12 +364,28 @@
 			
 			<a-image class="ui-hexagon" circle-layout="radius: 4;" material="shader:flat;"  src="#hexTex1"  scale="2.5 2 2.5" look-at="#camera1">
 				<a-box custom-button mixin="blue" depth="0.01" height="0.2" width="0.2" position="0 -0.25 0" ></a-box>
-				<!--<a-entity position="20 0 0">
-					<a-image class="textImgEntity" src="#textImg" position="0 0 0" scale="2 2 2"> </a-image>
-				</a-entity>-->
-
+				<a-entity position="1.01 0 0.2" rotation="0 0 0"  >
+					<a-image class="textImgEntity" src="#textImg" position="0 0.25 0" width="1" height="0.5">
+					<a-animation begin="3000" easing="ease-out-cubic"  fill="both" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation> </a-image>
+					<a-entity position="-0.33 -0.1 0"  layout="type: line; margin:0.33 " >
+						<a-image class="galleryImg" src="#gallery1" width="0.32" height="0.16" ><a-animation begin="3000" easing="ease-out-cubic"  fill="both" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation> </a-image>
+						<a-image class="galleryImg" src="#gallery2" width="0.32" height="0.16"><a-animation begin="3000" easing="ease-out-cubic"  fill="both" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation> </a-image>
+						<a-image class="galleryImg" src="#gallery3" width="0.32" height="0.16"><a-animation begin="3000" easing="ease-out-cubic"  fill="both" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation> </a-image>
+					</a-entity>
+					<a-entity position="-0.33 -0.33 0"  layout="type: line; margin:0.33 " >
+						<a-image class="galleryImg" src="#textImg" width="0.32" height="0.16" ><a-animation begin="3000" easing="ease-out-cubic"  fill="both" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation> </a-image>
+						<a-image class="galleryImg" src="#textImg" width="0.32" height="0.16"><a-animation begin="3000" easing="ease-out-cubic"  fill="both" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation> </a-image>
+						<a-image class="galleryImg" src="#textImg" width="0.32" height="0.16"><a-animation begin="3000" easing="ease-out-cubic"  fill="both" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation> </a-image>
+					</a-entity>
+					
+					<a-animation begin="fade-out" easing="ease-out-cubic"  fill="forward" direction="normal"  attribute="material.opacity"  to="0" dur="3000"> </a-animation>
+					<a-animation begin="3000" easing="ease-out-cubic"  fill="both" direction="normal"  attribute="material.opacity" from="0" to="1" dur="3000"> </a-animation>
+					
+				
+				</a-entity>
 			</a-image >
-			<a-image class="ui-hexagon" circle-layout="radius: 4;" material="shader:flat;" src="#hexTex1" scale="2.5 2 2.5" look-at="#camera1">
+
+			<!--<a-image class="ui-hexagon" circle-layout="radius: 4;" material="shader:flat;" src="#hexTex1" scale="2.5 2 2.5" look-at="#camera1">
 				<a-box custom-button mixin="blue" depth="0.01" height="0.2" width="0.2" position="0 -0.25 0" ></a-box>
 			</a-image >
 
@@ -381,7 +403,7 @@
 
 			<a-image class="ui-hexagon" circle-layout="radius: 4;" material="shader:flat;" src="#hexTex1" scale="2.5 2 2.5" look-at="#camera1">
 				<a-box custom-button mixin="red" depth="0.01" height="0.2" width="0.2" position="0 -0.25 0"></a-box>
-			</a-image >
+			</a-image >-->
 			
 			
 			
